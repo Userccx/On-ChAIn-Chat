@@ -26,8 +26,6 @@ flowchart LR
 
 ```
 
----
-
 ## 1.2 模块解析
 
 **1.2.1 config**
@@ -62,8 +60,6 @@ flowchart LR
 - `auth_routes`：`/api/auth/nonce` 下发 nonce；`/api/auth/verify` 校验签名并颁发 JWT。
 - `chat_routes`：`/api/chat` 依赖 JWT、校验消息长度，调用 `LLMService`。
 - `mint_routes`：`/api/mints` 校验对话、标题、钱包一致性，串联 IPFS + 链服务返回 NFT 元信息。
-
----
 
 ## 1.3 核心链路
 
@@ -154,8 +150,6 @@ sequenceDiagram
 - 与聊天复用 `ensure_messages`，保证上下文长度受控。
 - `ensure_same_wallet` 让请求体里的地址与 JWT 一致，避免越权铸造。
 - 伪链路输出 Token ID / Tx Hash，未来可替换为真实链上交互。
-
----
 
 ### 1.3.4 协作模式总结
 
