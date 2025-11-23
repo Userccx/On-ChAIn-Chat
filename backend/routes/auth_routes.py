@@ -1,14 +1,14 @@
 # Wallet authentication
 from fastapi import APIRouter, Depends, HTTPException
 
-from config import settings
-from models.user_models import (
+from ..config import settings
+from ..models.user_models import (
     NonceResponse,
     WalletAuthRequest,
     WalletAuthResponse,
 )
-from services import get_wallet_service
-from services.wallet_service import WalletService
+from ..services import get_wallet_service
+from ..services.wallet_service import WalletService
 
 router = APIRouter(prefix=f"{settings.API_PREFIX}/auth", tags=["authentication"])
 

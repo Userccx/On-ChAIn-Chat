@@ -7,8 +7,8 @@ from pydantic import BaseModel
 
 class WalletAuthRequest(BaseModel):
     address: str
-    signature: str
-    message: str
+    signature: Optional[str] = None
+    message: Optional[str] = None
 
 
 class WalletTokenPayload(BaseModel):

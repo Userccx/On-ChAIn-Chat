@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     DEFAULT_LLM_MODEL: str = "gpt-4o-mini"
     FALLBACK_LLM_MODEL: str = "gpt-3.5-turbo"
     MAX_HISTORY_MESSAGES: int = 30
+    MOCK_LLM_REPLY: str = "Hello world"
 
     # API Keys for different LLM providers
     OPENAI_API_KEY: Optional[str] = None
@@ -41,6 +42,8 @@ class Settings(BaseSettings):
 
     # Database (Optional - for caching)
     DATABASE_URL: str = "sqlite:///./chat_history.db"
+    USE_MOCK_SERVICES: bool = True
+    MOCK_WALLET_ADDRESS: str = "0xMockWallet000000000000000000000000000000"
 
     class Config:
         env_file = ".env"

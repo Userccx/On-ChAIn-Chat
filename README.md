@@ -1,5 +1,12 @@
 # 5017 Group Project
 
+# 0.后端Quick Start
+```bash
+pip install fastapi uvicorn pydantic-settings openai anthropic google-generativeai ipfshttpclient web3 pyjwt
+cd ./Project
+uvicorn backend.main:app --reload
+```
+
 # 1.后端说明文档
 
 ## 1.1 架构概览

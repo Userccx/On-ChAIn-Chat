@@ -4,8 +4,8 @@ from typing import Dict, List, Optional
 
 import ipfshttpclient
 
-from config import settings
-from models.chat_models import ChatMessage
+from ..config import settings
+from ..models.chat_models import ChatMessage
 
 
 class StorageService:

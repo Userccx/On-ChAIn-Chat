@@ -1,12 +1,12 @@
 # Chat functionality
 from fastapi import APIRouter, Depends, HTTPException
 
-from config import settings
-from middleware.auth_middleware import verify_wallet_token
-from models.chat_models import ChatRequest, ChatResponse
-from services import get_llm_service
-from services.llm_service import LLMService
-from utils.validation import ValidationError, ensure_messages
+from ..config import settings
+from ..middleware.auth_middleware import verify_wallet_token
+from ..models.chat_models import ChatRequest, ChatResponse
+from ..services import get_llm_service
+from ..services.llm_service import LLMService
+from ..utils.validation import ValidationError, ensure_messages
 
 router = APIRouter(prefix=f"{settings.API_PREFIX}/chat", tags=["chat"])
 

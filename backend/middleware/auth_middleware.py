@@ -2,7 +2,7 @@
 from fastapi import Header, HTTPException
 import jwt
 
-from config import settings
+from ..config import settings
 
 
 async def verify_wallet_token(authorization: str = Header(None, alias="Authorization")) -> str:

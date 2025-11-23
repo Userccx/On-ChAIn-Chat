@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Dict, List
 
-from config import settings
+from ..config import settings
 
 
 class BlockchainService:

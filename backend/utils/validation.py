@@ -1,7 +1,7 @@
 # Input validation helpers
 from typing import List, Optional, Sequence
 
-from models.chat_models import ChatMessage
+from ..models.chat_models import ChatMessage
 
 
 class ValidationError(ValueError):

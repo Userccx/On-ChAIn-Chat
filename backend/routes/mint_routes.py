@@ -1,13 +1,13 @@
 # NFT minting endpoints
 from fastapi import APIRouter, Depends, HTTPException
 
-from config import settings
-from middleware.auth_middleware import verify_wallet_token
-from models.chat_models import MintRequest, MintResponse
-from services import get_blockchain_service, get_storage_service
-from services.blockchain_service import BlockchainService
-from services.storage_service import StorageService
-from utils.validation import (
+from ..config import settings
+from ..middleware.auth_middleware import verify_wallet_token
+from ..models.chat_models import MintRequest, MintResponse
+from ..services import get_blockchain_service, get_storage_service
+from ..services.blockchain_service import BlockchainService
+from ..services.storage_service import StorageService
+from ..utils.validation import (
     ValidationError,
     ensure_messages,
     ensure_same_wallet,
