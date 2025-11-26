@@ -3,6 +3,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional, Tuple
 
+# 使用 PyJWT
 import jwt
 
 from ..config import settings

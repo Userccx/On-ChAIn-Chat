@@ -8,7 +8,7 @@ from ..models.chat_models import ChatMessage
 class LLMService:
     """Very lightweight LLM proxy returning mock data for smoke tests."""
 
-    async def get_response(
+    def get_response(
         self,
         messages: List[ChatMessage],
         model: Optional[str] = None,

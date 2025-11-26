@@ -25,6 +25,8 @@ class ChatResponse(BaseModel):
     provider: Optional[str] = None
     latency_ms: Optional[int] = None
     wallet_address: Optional[str] = None
+    ipfs_hash: Optional[str] = None  # 本次对话存储的 IPFS 哈希
+    stored_at: Optional[str] = None  # 存储时间戳
 
 
 class MintRequest(BaseModel):

@@ -1,0 +1,24 @@
+# Flask and core dependencies
+Flask>=2.3.0
+flask-cors>=4.0.0
+
+# Configuration
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# JWT authentication
+PyJWT>=2.8.0
+
+# Blockchain interaction
+web3>=6.0.0
+eth-account>=0.9.0
+
+# IPFS (optional, for storage service)
+ipfshttpclient>=0.8.0
+requests>=2.31.0  # For Pinata API calls
+
+# LLM providers (optional, for real LLM integration)
+# openai>=1.0.0
+# anthropic>=0.7.0
+# google-generativeai>=0.3.0
+

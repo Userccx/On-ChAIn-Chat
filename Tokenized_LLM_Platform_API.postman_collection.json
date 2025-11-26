@@ -1,0 +1,759 @@
+{
+	"info": {
+		"_postman_id": "tokenized-llm-platform-api-v2",
+		"name": "Tokenized LLM Platform API v2.0",
+		"description": "Complete API test collection for Tokenized LLM Interaction Platform - Updated with index hash management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "tokenized-llm-platform"
+	},
+	"item": [
+		{
+			"name": "01. Health Check",
+			"item": [
+				{
+					"name": "Root Path",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "02. Authentication",
+			"item": [
+				{
+					"name": "Get Nonce",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set(\"nonce\", response.nonce);",
+									"    pm.environment.set(\"auth_message\", response.message);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/nonce/{{wallet_address}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "nonce", "{{wallet_address}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Wallet (Mock Mode)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set(\"access_token\", response.access_token);",
+									"    pm.test(\"Token received\", function () {",
+									"        pm.expect(response.access_token).to.be.a('string');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"address\": \"{{wallet_address}}\",\n  \"message\": \"{{auth_message}}\",\n  \"signature\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/verify",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "verify"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Wallet - Invalid Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"address\": \"{{wallet_address}}\",\n  \"message\": \"wrong message\",\n  \"signature\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/verify",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "verify"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03. Chat",
+			"item": [
+				{
+					"name": "Send First Message",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.ipfs_hash) {",
+									"        pm.environment.set(\"first_chat_hash\", response.ipfs_hash);",
+									"    }",
+									"    pm.test(\"Response has IPFS hash\", function () {",
+									"        pm.expect(response).to.have.property('ipfs_hash');",
+									"        pm.expect(response).to.have.property('stored_at');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Hello, what is blockchain?\",\n      \"timestamp\": null\n    }\n  ],\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.7,\n  \"max_tokens\": 2000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Second Message (With Context)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.ipfs_hash) {",
+									"        pm.environment.set(\"second_chat_hash\", response.ipfs_hash);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Hello, what is blockchain?\",\n      \"timestamp\": null\n    },\n    {\n      \"role\": \"assistant\",\n      \"content\": \"Hello world\",\n      \"timestamp\": null\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Can you explain more?\",\n      \"timestamp\": null\n    }\n  ],\n  \"model\": \"gpt-4o-mini\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Third Message",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"What are the benefits?\",\n      \"timestamp\": null\n    }\n  ],\n  \"model\": \"gpt-4o-mini\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Chat - Missing Authorization",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Test message\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Chat - Empty Messages",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": []\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "04. History & IPFS",
+			"item": [
+				{
+					"name": "Get Chat History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"History retrieved successfully\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('wallet_address');",
+									"    pm.expect(response).to.have.property('total_turns');",
+									"    pm.expect(response).to.have.property('history');",
+									"    pm.expect(response.history).to.be.an('array');",
+									"    pm.expect(response.total_turns).to.be.at.least(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chat/history",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat", "history"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pinned Content",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chat/pinned",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat", "pinned"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "05. Index Hash Management",
+			"item": [
+				{
+					"name": "Get Index Hash",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.index_hash) {",
+									"        pm.environment.set(\"index_hash\", response.index_hash);",
+									"    }",
+									"    pm.test(\"Index hash retrieved\", function () {",
+									"        pm.expect(response).to.have.property('index_hash');",
+									"        pm.expect(response).to.have.property('has_index');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chat/index-hash",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat", "index-hash"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Index Hash",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"index_hash\": \"{{index_hash}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat/index-hash",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat", "index-hash"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Index Hash - Missing Parameter",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat/index-hash",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat", "index-hash"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "06. Pinning",
+			"item": [
+				{
+					"name": "Unpin Chat Turn",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chat/unpin/{{first_chat_hash}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat", "unpin", "{{first_chat_hash}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unpin - Invalid Hash",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chat/unpin/QmInvalidHash123456789",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat", "unpin", "QmInvalidHash123456789"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unpin - Missing Authorization",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chat/unpin/{{first_chat_hash}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat", "unpin", "{{first_chat_hash}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "07. NFT Minting",
+			"item": [
+				{
+					"name": "Mint Conversation NFT",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Hello, what is blockchain?\",\n      \"timestamp\": null\n    },\n    {\n      \"role\": \"assistant\",\n      \"content\": \"Hello world\",\n      \"timestamp\": null\n    }\n  ],\n  \"conversationTitle\": \"My First NFT Conversation\",\n  \"description\": \"A conversation about blockchain technology\",\n  \"userAddress\": \"{{wallet_address}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mints",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mints"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mint NFT - Wallet Mismatch",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Test\"\n    }\n  ],\n  \"conversationTitle\": \"Test\",\n  \"userAddress\": \"0xDifferentAddress123456789012345678901234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mints",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mints"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mint NFT - Title Too Long",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Test\"\n    }\n  ],\n  \"conversationTitle\": \"A very long title that exceeds the maximum allowed length of 120 characters and should trigger a validation error\",\n  \"userAddress\": \"{{wallet_address}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mints",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mints"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mint NFT - Empty Messages",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [],\n  \"conversationTitle\": \"Empty Conversation\",\n  \"userAddress\": \"{{wallet_address}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mints",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mints"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-set timestamp",
+					"pm.environment.set(\"timestamp\", new Date().toISOString());",
+					"",
+					"// Check base_url",
+					"if (!pm.environment.get(\"base_url\")) {",
+					"    console.warn(\"⚠️ base_url not set, using default\");",
+					"    pm.environment.set(\"base_url\", \"http://127.0.0.1:5000\");",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test: Check response time",
+					"pm.test(\"Response time is less than 5000ms\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"// Global test: Check response format",
+					"if (pm.response.code < 400) {",
+					"    pm.test(\"Response is valid JSON\", function () {",
+					"        pm.response.to.be.json;",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:5000",
+			"type": "string"
+		},
+		{
+			"key": "wallet_address",
+			"value": "0x1234567890abcdef1234567890abcdef12345678",
+			"type": "string"
+		}
+	]
+}

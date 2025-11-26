@@ -2,9 +2,9 @@
 
 # 0.后端Quick Start
 ```bash
-pip install fastapi uvicorn pydantic-settings openai anthropic google-generativeai ipfshttpclient web3 pyjwt
+pip install flask flask_cor jwt uvicorn pydantic-settings openai anthropic google-generativeai ipfshttpclient web3 pyjwt
 cd ./Project
-uvicorn backend.main:app --reload
+python -m flask --app backend.main:app run --reload
 ```
 
 # 1.后端说明文档

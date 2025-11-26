@@ -1,12 +1,10 @@
 # NFT minting endpoints
-from fastapi import APIRouter, Depends, HTTPException
+from flask import Blueprint, request, jsonify
 
 from ..config import settings
 from ..middleware.auth_middleware import verify_wallet_token
 from ..models.chat_models import MintRequest, MintResponse
 from ..services import get_blockchain_service, get_storage_service
-from ..services.blockchain_service import BlockchainService
-from ..services.storage_service import StorageService
 from ..utils.validation import (
     ValidationError,
     ensure_messages,
@@ -14,47 +12,57 @@ from ..utils.validation import (
     ensure_title,
 )
 
-router = APIRouter(prefix=f"{settings.API_PREFIX}/mints", tags=["mint"])
+bp = Blueprint("mint", __name__, url_prefix=f"{settings.API_PREFIX}/mints")
 
 
-@router.post("", response_model=MintResponse)
-async def mint_conversation_nft(
-    request: MintRequest,
-    user_address: str = Depends(verify_wallet_token),
-    storage_service: StorageService = Depends(get_storage_service),
-    blockchain_service: BlockchainService = Depends(get_blockchain_service),
-):
+@bp.route("", methods=["POST"])
+@verify_wallet_token
+def mint_conversation_nft():
     """Mint conversation as NFT."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"detail": "Request body is required"}), 400
+
+    try:
+        mint_request = MintRequest(**data)
+    except Exception as e:
+        return jsonify({"detail": f"Invalid request: {str(e)}"}), 400
+
     try:
         trimmed_messages = ensure_messages(
-            request.messages, settings.MAX_HISTORY_MESSAGES
+            mint_request.messages, settings.MAX_HISTORY_MESSAGES
         )
-        wallet_address = ensure_same_wallet(user_address, request.user_address)
-        title = ensure_title(request.conversation_title)
+        wallet_address = ensure_same_wallet(
+            request.wallet_address, mint_request.user_address
+        )
+        title = ensure_title(mint_request.conversation_title)
 
-        storage_result = await storage_service.upload_conversation_metadata(
+        storage_service = get_storage_service()
+        storage_result = storage_service.upload_conversation_metadata(
             messages=trimmed_messages,
             user_address=wallet_address,
             title=title,
-            description=request.description,
+            description=mint_request.description,
         )
 
-        mint_result = await blockchain_service.mint_context_nft(
+        blockchain_service = get_blockchain_service()
+        mint_result = blockchain_service.mint_context_nft(
             user_address=wallet_address,
             metadata_url=storage_result["metadataUrl"],
         )
 
-        return MintResponse(
+        result = MintResponse(
             **storage_result,
             token_id=mint_result.get("token_id"),
             tx_hash=mint_result.get("tx_hash"),
             message=mint_result.get("message"),
         )
+        return jsonify(result.dict())
 
     except ValidationError as ve:
-        raise HTTPException(status_code=422, detail=str(ve)) from ve
+        return jsonify({"detail": str(ve)}), 422
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to mint conversation NFT: {str(e)}"
-        ) from e
+        return jsonify(
+            {"detail": f"Failed to mint conversation NFT: {str(e)}"}
+        ), 500
 

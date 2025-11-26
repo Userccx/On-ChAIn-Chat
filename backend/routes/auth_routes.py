@@ -1,5 +1,5 @@
 # Wallet authentication
-from fastapi import APIRouter, Depends, HTTPException
+from flask import Blueprint, request, jsonify
 
 from ..config import settings
 from ..models.user_models import (
@@ -8,35 +8,40 @@ from ..models.user_models import (
     WalletAuthResponse,
 )
 from ..services import get_wallet_service
-from ..services.wallet_service import WalletService
 
-router = APIRouter(prefix=f"{settings.API_PREFIX}/auth", tags=["authentication"])
+bp = Blueprint("auth", __name__, url_prefix=f"{settings.API_PREFIX}/auth")
 
 
-@router.get("/nonce/{address}", response_model=NonceResponse)
-async def get_nonce(
-    address: str,
-    wallet_service: WalletService = Depends(get_wallet_service),
-):
+@bp.route("/nonce/<address>", methods=["GET"])
+def get_nonce(address: str):
     """Get nonce for wallet signature."""
-    return wallet_service.generate_nonce(address)
+    wallet_service = get_wallet_service()
+    result = wallet_service.generate_nonce(address)
+    return jsonify(result)
 
 
-@router.post("/verify", response_model=WalletAuthResponse)
-async def verify_wallet(
-    request: WalletAuthRequest,
-    wallet_service: WalletService = Depends(get_wallet_service),
-):
+@bp.route("/verify", methods=["POST"])
+def verify_wallet():
     """Verify wallet signature and return JWT token."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"detail": "Request body is required"}), 400
+
+    try:
+        auth_request = WalletAuthRequest(**data)
+    except Exception as e:
+        return jsonify({"detail": f"Invalid request: {str(e)}"}), 400
+
+    wallet_service = get_wallet_service()
     is_valid, normalized_address, error = wallet_service.verify_signature(
-        address=request.address,
-        message=request.message,
-        signature=request.signature,
+        address=auth_request.address,
+        message=auth_request.message,
+        signature=auth_request.signature,
     )
 
     if not is_valid or not normalized_address:
-        raise HTTPException(status_code=401, detail=error or "Invalid signature")
+        return jsonify({"detail": error or "Invalid signature"}), 401
 
     token = wallet_service.issue_access_token(normalized_address)
-    return WalletAuthResponse(access_token=token)
+    return jsonify(WalletAuthResponse(access_token=token).dict())
 

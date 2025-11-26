@@ -30,10 +30,21 @@ class Settings(BaseSettings):
     # IPFS Configuration
     IPFS_API_URL: str = "http://127.0.0.1:5001"
     IPFS_GATEWAY: str = "https://ipfs.io/ipfs/"
+    
+    # IPFS Pinning Service Configuration
+    # 选项：'local' (本地节点), 'pinata' (Pinata 服务), 'none' (不 pinning)
+    IPFS_PINNING_SERVICE: str = "pinata"
+    PINATA_API_KEY: Optional[str] = None
+    PINATA_SECRET_KEY: Optional[str] = None
+    PINATA_JWT: Optional[str] = None  # Pinata JWT token (推荐使用，替代 API Key + Secret)
 
     # Blockchain Configuration (Pseudo for now)
     BLOCKCHAIN_NETWORK: str = "polygon-mumbai"
     CONTRACT_ADDRESS: Optional[str] = None
+    PAYMENT_TOKEN_ADDRESS: Optional[str] = None  # 如果使用 ERC20 版本
+    WEB3_RPC_URL: Optional[str] = "https://eth-mainnet.g.alchemy.com/v2/9m2L_-2aXz8zn881udhPC"
+    PRIVATE_KEY: Optional[str] = None  # 后端签名交易的私钥
+    CHAIN_ID: int = 1  # 主网=1, Sepolia=11155111, Polygon Mumbai=80001
 
     # Security
     JWT_SECRET: str = "your-secret-key"
@@ -47,6 +58,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
 
 
 @lru_cache
