@@ -8,6 +8,9 @@ from ..models.user_models import (
     WalletAuthResponse,
 )
 from ..services import get_wallet_service
+from ..utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 bp = Blueprint("auth", __name__, url_prefix=f"{settings.API_PREFIX}/auth")
 
@@ -15,6 +18,7 @@ bp = Blueprint("auth", __name__, url_prefix=f"{settings.API_PREFIX}/auth")
 @bp.route("/nonce/<address>", methods=["GET"])
 def get_nonce(address: str):
     """Get nonce for wallet signature."""
+    logger.info(f"Getting nonce for wallet: {address}")
     wallet_service = get_wallet_service()
     result = wallet_service.generate_nonce(address)
     return jsonify(result)
